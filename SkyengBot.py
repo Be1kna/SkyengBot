@@ -28,15 +28,18 @@ except Exception as e:
 def handle_start(message):
     bot.send_message(message.chat.id, 'Привет! Это бот для изучения английских слов.')
 
-# Команда /cancel для отмены текущего действия
-@bot.message_handler(commands=['cancel'])
-def handle_cancel(message):
-    try:
-        bot.clear_step_handler_by_chat_id(message.chat.id)
-        bot.send_message(message.chat.id, 'Действие отменено.')
-    except Exception as e:
-        print(f'Ошибка при отмене действия: {e} в функции handle_cancel')
-        bot.send_message(message.chat.id, 'Произошла ошибка при отмене действия. Пожалуйста, сообщите о проблеме разработчику.')
+# Функция для отмены текущего действия
+def check_cancel(message):
+    keywords = ['cancel', 'отмена', 'отменить']
+    if any(keyword in message.text.lower() for keyword in keywords):
+        try:
+            bot.clear_step_handler_by_chat_id(message.chat.id)
+            bot.send_message(message.chat.id, 'Действие отменено.')
+            return True
+        except Exception as e:
+            print(f'Ошибка при отмене действия: {e} в функции handle_cancel')
+            bot.send_message(message.chat.id, 'Произошла ошибка при отмене действия. Пожалуйста, сообщите о проблеме разработчику.')
+    return False
 
 
 
@@ -55,6 +58,7 @@ def handle_learn(message):
 
 # Функция для запроса количества слов для обучения у пользователя
 def ask_word_count(message,user_words):
+    if check_cancel(message): return
     chat_id = message.chat.id
     #Получить вводные данные от пользователя
     try:
@@ -66,12 +70,14 @@ def ask_word_count(message,user_words):
     #Проверить, достаточно ли слов для обучения, и продолжить на следующий шаг
     if word_count <= len(user_words):
         words_list = random.sample(list(user_words.keys()), word_count)
-        ask_translation(chat_id, user_words, words_list)
+        ask_translation(message, user_words, words_list)
     else:
         bot.send_message(chat_id, f'У вас недостаточно слов для обучения. \nУ вас есть {len(user_words)} слов. \nИспользуйте команду /addword, чтобы добавить слова для обучения.')
 
 # Функция для запроса перевода слова у пользователя
-def ask_translation(chat_id, user_words, words_left):
+def ask_translation(message, user_words, words_left):
+    if check_cancel(message): return
+    chat_id = message.chat.id
     #Проверить все ли слова были повторены
     if words_left == []:
         bot.send_message(chat_id, 'Вы повторили все слова! Отличная работа!')
@@ -82,6 +88,7 @@ def ask_translation(chat_id, user_words, words_left):
 
 # Функция для проверки перевода слова, введенного пользователем
 def check_translation(message, asked_word,user_words,words_left):
+    if check_cancel(message): return
     user_translation = message.text.strip().lower()
     correct_translation = user_words[asked_word]
     #Проверить правильность перевода и отправить соответствующее сообщение пользователю
@@ -91,7 +98,7 @@ def check_translation(message, asked_word,user_words,words_left):
         bot.send_message(message.chat.id, f'Неправильно! Правильный перевод слова - "{correct_translation}".')
     #Удалить слово из списка слов для повторения и продолжить повторение остальных слов
     words_left.remove(asked_word)
-    ask_translation(message.chat.id, user_words, words_left)
+    ask_translation(message, user_words, words_left)
 
 
 
@@ -112,6 +119,7 @@ def handle_addword(message):
 
 # Функция для добавления слова и его перевода в словарь пользователя
 def addword(message, user_dict):
+    if check_cancel(message): return
     global user_data
     chat_id = message.chat.id
     #Получить вводные данные от пользователя
@@ -131,6 +139,7 @@ def addword(message, user_dict):
 
 # Функция для добавления перевода слова в словарь пользователя
 def addtranslation(message, user_dict, word):
+    if check_cancel(message): return
     global user_data
     chat_id = message.chat.id
     #Получить вводные данные от пользователя
@@ -168,6 +177,7 @@ def handle_deleteword(message):
 
 # Функция для удаления слова из словаря пользователя
 def delete_word(message, user_words):
+    if check_cancel(message): return
     global user_data
     chat_id = message.chat.id
     #Получить вводные данные от пользователя
@@ -231,6 +241,8 @@ def handle_message(message):
             replyText += 'Пожалуйста, напишите текст после слова "эхо". '
         else:
             replyText += echo_text
+    if 'cancel' in message.text.lower() or 'отмена' in message.text.lower() or 'отменить' in message.text.lower():
+        replyText += 'У вас нет активных действий для отмены. '
     if replyText == '':
         replyText += 'Извини, я не поняла твое сообщение. '
     bot.send_message(message.chat.id, replyText)
