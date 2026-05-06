@@ -218,7 +218,7 @@ def handle_words(message):
 # Команда /help для получения информации о боте и его возможностях
 @bot.message_handler(commands=['help'])
 def handle_help(message):
-    bot.send_message(message.chat.id, 'Привет! Это бот для разных задач:\n/start - начать\n/learn - повторить\n/addword - добавить слово\n/delword - удалить слово\n/help - помощь\nИли просто напишити сообщение, и я постараюсь ответить!\n\nБот создан Be1kna для Skyeng.')
+    bot.send_message(message.chat.id, 'Привет! Это бот для разных задач:\n/start - начать\n/learn - повторить\n/addword - добавить слово\n/delword - удалить слово\n/cancel - отменить действие\n/help - помощь\nИли просто напишити сообщение, и я постараюсь ответить!\n\nБот создан Be1kna для Skyeng.')
 
 # Обработчик для всех остальных сообщений, которые не являются командами
 @bot.message_handler(func=lambda message: True)
@@ -243,7 +243,7 @@ def handle_message(message):
             replyText += echo_text
     if 'cancel' in message.text.lower() or 'отмена' in message.text.lower() or 'отменить' in message.text.lower():
         replyText += 'У вас нет активных действий для отмены. '
-    if replyText == '':
+    if replyText == '' and message.chat.type == 'private':
         replyText += 'Извини, я не поняла твое сообщение. '
     bot.send_message(message.chat.id, replyText)
 
