@@ -250,4 +250,4 @@ def handle_message(message):
 # Запуск бота
 if __name__ == '__main__':
     print('Bot running...')
-    bot.polling(none_stop=True)
+    bot.polling(none_stop=True, timeout=60, long_polling_timeout=60)
